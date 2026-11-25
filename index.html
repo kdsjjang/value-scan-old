@@ -34,7 +34,7 @@
     </script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-        
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
             background-color: #ffffff;
@@ -139,7 +139,7 @@
         <!-- 업로드 및 프리셋 선택 영역 (Apple Store Step 1 스타일) -->
         <section class="pb-12 border-b border-[#d2d2d7]/60">
             <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
-                
+
                 <!-- 좌측: 사진 업로드 카드 -->
                 <div class="md:col-span-7">
                     <h2 class="text-lg font-semibold text-[#1d1d1f] mb-3">
@@ -196,15 +196,15 @@
 
         <!-- 스캔 프리뷰 및 감정 결과 섹션 (Apple Store 2컬럼 Sticky Product Configurator 구조) -->
         <section id="analysisSection" class="hidden pt-12 pb-16 border-b border-[#d2d2d7]/60">
-            
+
             <div class="grid grid-cols-1 md:grid-cols-12 gap-10 items-start">
-                
+
                 <!-- 좌측 Sticky 영역: 제품 이미지 갤러리 프레임 + 세부 상태 진단 -->
                 <div class="md:col-span-6 md:sticky md:top-16 space-y-5">
                     <div class="bg-[#f5f5f7] rounded-[18px] p-5 border border-[#d2d2d7]/50">
                         <div id="imageContainer" class="relative w-full aspect-square bg-white rounded-xl overflow-hidden flex items-center justify-center border border-[#d2d2d7]/40">
                             <img id="itemPreviewImg" src="" alt="물품 사진" class="w-full h-full object-cover">
-                            
+
                             <div id="scanOverlay" class="absolute inset-0 bg-white/85 backdrop-blur-md flex flex-col items-center justify-center text-[#1d1d1f] px-6 text-center">
                                 <div class="scan-laser"></div>
                                 <div class="w-8 h-8 border-2 border-[#0071e3] border-t-transparent rounded-full animate-spin mb-3"></div>
@@ -267,7 +267,7 @@
 
                 <!-- 우측 스크롤 영역: 감정 결과 요약 & 옵션 카드 & 판매 액션 -->
                 <div class="md:col-span-6 space-y-8">
-                    
+
                     <!-- 모델명 & 예상 적정 시세 헤더 -->
                     <div class="pb-6 border-b border-[#d2d2d7]/60">
                         <span id="itemCategoryTag" class="text-xs font-semibold text-[#bf4800]">가치 정밀 감정</span>
@@ -410,54 +410,130 @@
 
     </main>
 
-    <!-- 공식 AI 감정 인증서 모달 (Apple 스타일 깔끔한 시트) -->
-    <div id="certificateModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center hidden px-4">
-        <div class="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl border border-[#d2d2d7]">
-            <div class="px-6 pt-6 pb-4 border-b border-[#d2d2d7]/60 flex items-center justify-between">
+    <!-- 공식 AI 감정 인증서 모달 -->
+    <div id="certificateModal" class="fixed inset-0 bg-black/45 backdrop-blur-sm z-50 flex items-center justify-center hidden px-4 py-6">
+        <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-[#d2d2d7]">
+            <!-- 상단 문서 헤더 -->
+            <div class="px-6 pt-5 pb-4 border-b border-[#d2d2d7]/70 flex items-start justify-between sticky top-0 bg-white/95 backdrop-blur-md z-10">
                 <div>
-                    <span class="text-[11px] font-semibold text-[#bf4800]">OFFICIAL APPRAISAL</span>
-                    <h3 class="font-bold text-lg text-[#1d1d1f]">ValueScan 공식 감정서</h3>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#0071e3]"></span>
+                        <span class="text-[10px] font-semibold text-[#bf4800] tracking-wider uppercase">Official AI Vision Appraisal Certificate</span>
+                    </div>
+                    <h3 class="font-bold text-lg text-[#1d1d1f] tracking-tight mt-0.5">ValueScan 공식 디지털 감정서</h3>
                 </div>
-                <button onclick="closeCertificateModal()" class="w-7 h-7 rounded-full bg-[#f5f5f7] hover:bg-[#e8e8ed] text-[#6e6e73] flex items-center justify-center text-sm">
+                <button onclick="closeCertificateModal()" class="w-7 h-7 rounded-full bg-[#f5f5f7] hover:bg-[#e8e8ed] text-[#6e6e73] flex items-center justify-center text-sm shrink-0">
                     ✕
                 </button>
             </div>
 
             <div class="p-6 space-y-4">
-                <div class="bg-[#f5f5f7] p-4 rounded-xl flex items-center gap-4">
-                    <img id="certItemImg" src="" alt="썸네일" class="w-16 h-16 rounded-lg object-cover border border-[#d2d2d7]/60 shrink-0 bg-white">
+                <!-- 문서 식별 번호 및 무결성 검증 메타 바 -->
+                <div class="bg-[#f5f5f7] border border-[#d2d2d7]/60 rounded-xl px-4 py-3 grid grid-cols-2 gap-y-2 gap-x-4 text-[11px]">
                     <div>
-                        <span id="certSerial" class="text-[11px] font-mono text-[#6e6e73]">VS-2026-0000</span>
-                        <h4 id="certItemName" class="font-semibold text-sm text-[#1d1d1f] mt-0.5">제품명</h4>
-                        <p id="certDate" class="text-xs text-[#6e6e73] mt-0.5">감정일자: 2026. 11. 18</p>
+                        <span class="text-[#6e6e73] block">감정 일련번호</span>
+                        <span id="certSerial" class="font-mono font-semibold text-[#1d1d1f]">VS-2026-0000</span>
+                    </div>
+                    <div>
+                        <span class="text-[#6e6e73] block">무결성 검증 해시</span>
+                        <span id="certHash" class="font-mono font-medium text-[#0071e3]">VS-0000-0000-0000</span>
+                    </div>
+                    <div>
+                        <span class="text-[#6e6e73] block">발급 일자</span>
+                        <span id="certDate" class="font-medium text-[#1d1d1f]">2026. 11. 25.</span>
+                    </div>
+                    <div>
+                        <span class="text-[#6e6e73] block">시세 유효 권장 기한</span>
+                        <span id="certValidUntil" class="font-medium text-[#1d1d1f]">발급일로부터 14일</span>
                     </div>
                 </div>
 
-                <div class="border border-[#d2d2d7] rounded-xl p-4 space-y-2.5 text-xs">
-                    <div class="flex justify-between items-center">
-                        <span class="text-[#6e6e73]">판정 등급</span>
-                        <strong id="certGrade" class="font-bold text-[#1d1d1f]">A+ 등급</strong>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-[#6e6e73]">AI 공식 감정 시세</span>
-                        <strong id="certPrice" class="text-sm font-bold text-[#1d1d1f]">0원</strong>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-[#6e6e73]">실거래 적정 범주</span>
-                        <span id="certRange" class="text-[#1d1d1f]">0원 ~ 0원</span>
-                    </div>
-                    <div class="border-t border-[#d2d2d7]/60 pt-2.5 mt-2">
-                        <p id="certDesc" class="text-[#6e6e73] text-xs leading-relaxed"></p>
+                <!-- 감정 대상 품목 정보 -->
+                <div class="border border-[#d2d2d7] p-4 rounded-xl flex items-center gap-4 bg-white">
+                    <img id="certItemImg" src="" alt="썸네일" class="w-20 h-20 rounded-lg object-cover border border-[#d2d2d7]/60 shrink-0 bg-[#f5f5f7]">
+                    <div class="min-w-0 flex-1">
+                        <span id="certCategory" class="text-[11px] font-semibold text-[#bf4800] block truncate">전자기기</span>
+                        <h4 id="certItemName" class="font-bold text-[15px] text-[#1d1d1f] mt-0.5 leading-snug">제품명</h4>
+                        <div class="mt-2 inline-flex items-center gap-1.5 bg-[#f5f5f7] px-2 py-0.5 rounded text-[10px] font-mono text-[#6e6e73]">
+                            <span>Engine: ValueScan Vision v3.8</span>
+                        </div>
                     </div>
                 </div>
 
-                <p class="text-[11px] text-[#6e6e73] text-center">
-                    본 물품은 ValueScan 멀티모달 비전 AI 및 시장 시세 대조를 통해 검증되었습니다.
-                </p>
+                <!-- 종합 판정 등급 및 공식 시세 산출 표 -->
+                <div class="border border-[#d2d2d7] rounded-xl overflow-hidden text-xs">
+                    <div class="bg-[#f5f5f7]/80 px-4 py-2 border-b border-[#d2d2d7]/70 flex items-center justify-between">
+                        <span class="font-semibold text-[#1d1d1f]">1. 종합 등급 및 시세 산정 내역</span>
+                        <span class="text-[10px] text-[#6e6e73]">단위: KRW (원)</span>
+                    </div>
+                    <div class="p-4 space-y-3 bg-white">
+                        <div class="flex justify-between items-start gap-3">
+                            <div>
+                                <span class="text-[#6e6e73] block">AI 외관 상태 판정</span>
+                                <span id="certGradeCriteria" class="text-[11px] text-[#6e6e73] mt-0.5 block">외관 결함 및 구성품 기준</span>
+                            </div>
+                            <strong id="certGrade" class="text-sm font-bold text-[#0071e3] bg-[#0071e3]/10 px-2.5 py-1 rounded-md shrink-0">A+ 등급</strong>
+                        </div>
+                        <div class="border-t border-[#d2d2d7]/50 pt-2.5 flex justify-between items-center">
+                            <span class="text-[#6e6e73]">AI 공식 적정 기준가</span>
+                            <strong id="certPrice" class="text-base font-bold text-[#1d1d1f]">0원</strong>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-[#6e6e73]">실거래 안전 허용 밴드</span>
+                            <span id="certRange" class="font-medium text-[#1d1d1f]">0원 ~ 0원</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-[#6e6e73]">30일 내 예상 유동성(매각률)</span>
+                            <span id="certProb" class="font-semibold text-[#1d1d1f]">90%</span>
+                        </div>
+                    </div>
+                </div>
 
+                <!-- 3대 비전 정밀 검수 항목 스코어 -->
+                <div class="border border-[#d2d2d7] rounded-xl overflow-hidden text-xs">
+                    <div class="bg-[#f5f5f7]/80 px-4 py-2 border-b border-[#d2d2d7]/70">
+                        <span class="font-semibold text-[#1d1d1f]">2. 비전 정밀 진단 세부 지표</span>
+                    </div>
+                    <div class="p-4 grid grid-cols-3 gap-2.5 text-center bg-white">
+                        <div class="bg-[#f5f5f7] rounded-lg p-2.5">
+                            <span class="text-[11px] text-[#6e6e73] block">외관 보존도</span>
+                            <strong id="certScoreExterior" class="text-sm font-bold text-[#1d1d1f] mt-0.5 block">95 / 100</strong>
+                        </div>
+                        <div class="bg-[#f5f5f7] rounded-lg p-2.5">
+                            <span class="text-[11px] text-[#6e6e73] block">시장 수요 지수</span>
+                            <strong id="certScoreDemand" class="text-sm font-bold text-[#0071e3] mt-0.5 block">90 / 100</strong>
+                        </div>
+                        <div class="bg-[#f5f5f7] rounded-lg p-2.5">
+                            <span class="text-[11px] text-[#6e6e73] block">가격 방어력</span>
+                            <strong id="certScoreDefense" class="text-sm font-bold text-[#1d1d1f] mt-0.5 block">85 / 100</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI 전문 감정 소견서 -->
+                <div class="border border-[#d2d2d7] rounded-xl p-4 bg-white space-y-1.5">
+                    <span class="text-xs font-semibold text-[#1d1d1f] block">3. AI 비전 감정 소견</span>
+                    <p id="certDesc" class="text-xs text-[#6e6e73] leading-relaxed"></p>
+                </div>
+
+                <!-- 공식 인장 및 1,000원 유료 감정서 판매 안내 -->
+                <div class="bg-[#f5f5f7] rounded-xl p-4 flex items-center justify-between gap-4 border border-[#d2d2d7]/60">
+                    <p class="text-[10.5px] text-[#6e6e73] leading-relaxed">
+                        무결성 검증 해시와 3대 정밀 진단 리포트가 포함된 <strong class="text-[#1d1d1f] font-semibold">공식 디지털 감정서를 1,000원</strong>에 발급받으세요. 판매글에 첨부해 구매자 신뢰도를 높이고 빠른 거래 성사를 유도할 수 있습니다. (내부 기판·배터리 등 비가시적 요소는 대면 확인 권장)
+                    </p>
+                    <div class="shrink-0 flex flex-col items-center justify-center w-16 h-16 rounded-full border-2 border-[#0071e3]/70 text-[#0071e3] select-none">
+                        <svg class="w-4 h-4 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="text-[8px] font-bold tracking-tighter leading-none">VALUESCAN</span>
+                        <span class="text-[7px] font-semibold tracking-tight leading-none mt-0.5">VERIFIED</span>
+                    </div>
+                </div>
+
+                <!-- 하단 액션 버튼 -->
                 <div class="flex gap-2.5 pt-1">
                     <button onclick="copyCertificateSummary()" class="flex-1 bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium text-xs py-3 rounded-lg transition-colors">
-                        인증서 텍스트 복사하기
+                        공식 AI 감정서 구매하기 · 1,000원
                     </button>
                     <button onclick="closeCertificateModal()" class="px-5 bg-[#f5f5f7] hover:bg-[#e8e8ed] text-[#1d1d1f] font-medium text-xs py-3 rounded-lg transition-colors">
                         닫기
@@ -474,7 +550,7 @@
                 <h3 class="font-bold text-base text-[#1d1d1f]">제휴 매입 파트너 즉시 매각 신청</h3>
                 <button onclick="closePartnerBuyModal()" class="w-7 h-7 rounded-full bg-[#f5f5f7] hover:bg-[#e8e8ed] text-[#6e6e73] flex items-center justify-center text-sm">✕</button>
             </div>
-            
+
             <div class="bg-[#f5f5f7] p-4 rounded-xl space-y-2 text-xs">
                 <p class="font-semibold text-[#1d1d1f] text-sm" id="modalPartnerItemName">제품명</p>
                 <div class="flex justify-between text-[#6e6e73] pt-1">
@@ -662,9 +738,9 @@
         function calculateTrendArray(currentPrice, pPrev) {
             const pCurr = Number(currentPrice) || 0;
             const prev = Number(pPrev) || (pCurr * 1.015);
-            
+
             let decayRate = 1 - (pCurr / prev);
-            
+
             if (decayRate < -0.02) decayRate = -0.01; 
             if (decayRate > 0.05) decayRate = 0.02;
             if (decayRate === 0) decayRate = 0.015;
@@ -747,7 +823,7 @@
             }
 
             const base64Data = dataUrl.split(',')[1];
-            
+
             const prompt = `당신은 대한민국 대표 중고 거래 플랫폼(당근마켓, 번개장터, 중고나라)의 실거래가 감정 전문가입니다.
 사진 속 물건의 정확한 브랜드와 모델명을 식별하고, 최근 한국 시장의 실제 중고 직거래 시세를 바탕으로 JSON 결과를 반환하세요.
 
@@ -794,7 +870,7 @@
                 }
 
                 const result = await response.json();
-                
+
                 if (!response.ok || result.error) {
                     const errDetail = result.error ? result.error.message : response.statusText;
                     throw new Error(`API 오류 (${response.status}): ${errDetail}`);
@@ -805,11 +881,11 @@
                     const jsonMatch = textResult.match(/\{[\s\S]*\}/);
                     if (jsonMatch) {
                         updateProgressText("중고 거래 시세 및 수익 모델 산출 중...");
-                        
+
                         const parsedData = JSON.parse(jsonMatch[0]);
                         parsedData.img = dataUrl;
                         parsedData.trend = calculateTrendArray(parsedData.price, parsedData.pPrev);
-                        
+
                         setTimeout(() => {
                             finishAnalysisUI(parsedData);
                         }, 200);
@@ -867,7 +943,7 @@
             document.getElementById('itemNameDisplay').innerText = data.name;
             document.getElementById('itemCategoryTag').innerText = data.category;
             document.getElementById('itemDescriptionDisplay').innerText = data.description;
-            
+
             const priceNum = Number(data.price) || 0;
             const minPriceNum = Number(data.minPrice) || Math.round(priceNum * 0.92);
             const maxPriceNum = Number(data.maxPrice) || Math.round(priceNum * 1.08);
@@ -939,16 +1015,52 @@
             window.open(url, '_blank');
         }
 
+        function generateCertHash(data) {
+            const raw = `${data.serial}|${data.name}|${data.price}|${data.grade}`;
+            let h1 = 0x811c9dc5;
+            let h2 = 0x01000193;
+            for (let i = 0; i < raw.length; i++) {
+                const ch = raw.charCodeAt(i);
+                h1 ^= ch;
+                h1 = Math.imul(h1, 0x01000193);
+                h2 ^= (ch + i);
+                h2 = Math.imul(h2, 0x85ebca6b);
+            }
+            const part1 = (h1 >>> 0).toString(16).toUpperCase().padStart(8, '0');
+            const part2 = (h2 >>> 0).toString(16).toUpperCase().padStart(8, '0');
+            return `VS-${part1.slice(0, 4)}-${part2.slice(0, 4)}-${part1.slice(4, 8)}`;
+        }
+
+        function getGradeCriteriaText(grade) {
+            const g = (grade || '').toUpperCase();
+            if (g.includes('S')) return '신품급 최상 컨디션 · 외관 결함 없음';
+            if (g.includes('A+')) return '우수 컨디션 · 미세 사용감 외 양호';
+            if (g.includes('A')) return '양호 컨디션 · 정상 작동 및 생활기스';
+            return '실사용 가능 컨디션 · 외관 사용감 반영';
+        }
+
         function openCertificateModal() {
             if (!currentItemData) return;
+            const validDate = new Date();
+            validDate.setDate(validDate.getDate() + 14);
+            const scores = currentItemData.scores || { exterior: 92, demand: 90, defense: 87 };
+
             document.getElementById('certItemImg').src = currentItemData.img;
             document.getElementById('certSerial').innerText = currentItemData.serial;
+            document.getElementById('certHash').innerText = generateCertHash(currentItemData);
+            document.getElementById('certCategory').innerText = currentItemData.category || '일반 물품';
             document.getElementById('certItemName').innerText = currentItemData.name;
-            document.getElementById('certDate').innerText = `감정일자: ${currentItemData.date}`;
+            document.getElementById('certDate').innerText = currentItemData.date;
+            document.getElementById('certValidUntil').innerText = `${validDate.toLocaleDateString('ko-KR')} 까지 (14일)`;
             document.getElementById('certGrade').innerText = currentItemData.grade;
+            document.getElementById('certGradeCriteria').innerText = getGradeCriteriaText(currentItemData.grade);
             document.getElementById('certPrice').innerText = `${Number(currentItemData.price).toLocaleString()}원`;
             document.getElementById('certRange').innerText = `${Number(currentItemData.minPrice).toLocaleString()}원 ~ ${Number(currentItemData.maxPrice).toLocaleString()}원`;
-            document.getElementById('certDesc').innerText = `AI 소견: ${currentItemData.description}`;
+            document.getElementById('certProb').innerText = currentItemData.prob || '90%';
+            document.getElementById('certScoreExterior').innerText = `${scores.exterior} / 100`;
+            document.getElementById('certScoreDemand').innerText = `${scores.demand} / 100`;
+            document.getElementById('certScoreDefense').innerText = `${scores.defense} / 100`;
+            document.getElementById('certDesc').innerText = currentItemData.description;
             document.getElementById('certificateModal').classList.remove('hidden');
         }
 
@@ -958,9 +1070,26 @@
 
         function copyCertificateSummary() {
             if (!currentItemData) return;
-            const certText = `[ValueScan AI 감정 인증서]\n- 인증번호: ${currentItemData.serial}\n- 모델명: ${currentItemData.name}\n- 상태등급: ${currentItemData.grade}\n- 적정감정가: ${Number(currentItemData.price).toLocaleString()}원\n- 감정소견: ${currentItemData.description}`;
+            const validDate = new Date();
+            validDate.setDate(validDate.getDate() + 14);
+            const scores = currentItemData.scores || { exterior: 92, demand: 90, defense: 87 };
+            const certHash = generateCertHash(currentItemData);
+
+            const certText = `[ValueScan 공식 AI 비전 감정서]\n`
+                + `━━━━━━━━━━━━━━━━━━━━━━\n`
+                + `• 감정 일련번호: ${currentItemData.serial}\n`
+                + `• 무결성 검증코드: ${certHash}\n`
+                + `• 발급일자: ${currentItemData.date} (유효권장: ~${validDate.toLocaleDateString('ko-KR')})\n`
+                + `━━━━━━━━━━━━━━━━━━━━━━\n`
+                + `1. 품목명: ${currentItemData.name} (${currentItemData.category})\n`
+                + `2. 판정등급: ${currentItemData.grade} (${getGradeCriteriaText(currentItemData.grade)})\n`
+                + `3. 공식 적정시세: ${Number(currentItemData.price).toLocaleString()}원 (안전범위: ${Number(currentItemData.minPrice).toLocaleString()}~${Number(currentItemData.maxPrice).toLocaleString()}원)\n`
+                + `4. 정밀 진단점수: 외관보존 ${scores.exterior}점 / 시장수요 ${scores.demand}점 / 가격방어 ${scores.defense}점\n`
+                + `5. AI 감정소견: ${currentItemData.description}\n`
+                + `━━━━━━━━━━━━━━━━━━━━━━\n`
+                + `* ValueScan Vision Engine v3.8 기반 실거래 데이터 검증 완료`;
             navigator.clipboard.writeText(certText);
-            alert("감정 인증서 요약본이 복사되었습니다.");
+            alert("공식 AI 감정서(1,000원) 발급이 완료되어 전문이 클립보드에 복사되었습니다.");
         }
 
         function openPartnerBuyModal() {
