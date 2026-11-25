@@ -312,7 +312,7 @@
                             <h4 class="text-base font-semibold text-[#1d1d1f]">
                                 시세 전망. <span class="text-[#6e6e73] font-normal">향후 6개월 추이 (만원).</span>
                             </h4>
-                            <span class="text-[11px] text-[#6e6e73]">과거 실거래 추세 반영</span>
+                            <span class="text-[11px] text-[#6e6e73]">최근 3개월 실거래 추이 반영</span>
                         </div>
                         <div class="apple-card p-4 bg-white">
                             <div class="w-full h-36 relative">
@@ -608,7 +608,7 @@
         let valueTrendChart = null;
         let currentItemData = null;
 
-        // 국내 중고거래 실거래가 및 과거 월별 가격 추이 반영 프리셋
+        // 국내 중고거래 실거래가 및 최근 3개월 실거래 추이([3개월 전, 2개월 전, 1개월 전]) 반영 프리셋
         const presets = {
             iphone: {
                 name: "애플 아이폰 15 프로 256GB (내추럴 티타늄)",
@@ -619,7 +619,7 @@
                 maxPrice: 850000,
                 grade: "A+ 등급",
                 prob: "92%",
-                pPrev: 800000,
+                pHistory: [840000, 820000, 800000],
                 img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSJiZL6UOmsw_objnCwknvyZkpOJFiNY-AU22QyXLOTBg&s=10"
             },
             switch2: {
@@ -631,7 +631,7 @@
                 maxPrice: 670000,
                 grade: "S 등급",
                 prob: "95%",
-                pPrev: 630000,
+                pHistory: [600000, 610000, 615000],
                 img: "https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?auto=format&fit=crop&w=800&q=80"
             },
             rtx5090: {
@@ -643,7 +643,7 @@
                 maxPrice: 9600000,
                 grade: "S 등급",
                 prob: "90%",
-                pPrev: 9100000,
+                pHistory: [8100000, 8400000, 8650000],
                 img: "https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=800&q=80"
             },
             headphone: {
@@ -655,7 +655,7 @@
                 maxPrice: 290000,
                 grade: "A+ 등급",
                 prob: "88%",
-                pPrev: 270000,
+                pHistory: [285000, 275000, 268000],
                 img: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80"
             }
         };
@@ -752,21 +752,79 @@
             });
         }
 
-        // 과거 판매 매물 실거래가 기반 월평균 변동률(r) 및 미래 시세 산출: P_m = P_0 * (1 + r)^m
-        function calculateTrendArray(currentPrice, pPrev, monthsElapsed = 1) {
-            const p0 = Number(currentPrice) || 0;
+        function toCleanNumber(val) {
+            if (typeof val === 'number') return Number.isFinite(val) ? val : 0;
+            if (typeof val === 'string') {
+                const cleaned = val.replace(/[^0-9.-]/g, '');
+                const num = Number(cleaned);
+                return Number.isFinite(num) ? num : 0;
+            }
+            return 0;
+        }
+
+        // 동일 제품(샘플 vs 사진 인식) 간 최근 3개월 시세 추이 일관성 보정
+        function normalizeProductHistory(itemName, currentPrice, rawHistory) {
+            const p0 = toCleanNumber(currentPrice);
+            if (p0 <= 0) return [0, 0, 0];
+
+            const normalized = (itemName || '').toLowerCase().replace(/\s+/g, '');
+            let matchedPreset = null;
+
+            if (normalized.includes('스위치2') || normalized.includes('switch2')) {
+                matchedPreset = presets.switch2;
+            } else if (normalized.includes('아이폰15프로') || normalized.includes('iphone15pro')) {
+                matchedPreset = presets.iphone;
+            } else if (normalized.includes('rtx5090')) {
+                matchedPreset = presets.rtx5090;
+            } else if (normalized.includes('wh-1000xm5') || normalized.includes('wh1000xm5')) {
+                matchedPreset = presets.headphone;
+            }
+
+            // 동일 기준 모델이 매칭되면 샘플과 동일한 3개월 변동 비율을 현재 인식 시세(p0)에 비례 적용
+            if (matchedPreset && Array.isArray(matchedPreset.pHistory) && matchedPreset.pHistory.length === 3) {
+                const baseP0 = matchedPreset.price;
+                return matchedPreset.pHistory.map(h => Math.round(p0 * (h / baseP0)));
+            }
+
+            return rawHistory;
+        }
+
+        // 최근 3개월 실거래 가격 변동([3개월 전, 2개월 전, 1개월 전] -> 현재)을 모두 분석한 가중 변동률(r) 및 미래 시세 산출
+        function calculateTrendArray(currentPrice, pHistory, itemName = '') {
+            const p0 = toCleanNumber(currentPrice);
             if (p0 <= 0) return [0, 0, 0, 0, 0, 0];
 
-            const pPast = Number(pPrev) > 0 ? Number(pPrev) : (p0 * 1.015);
-            const n = Math.max(1, Number(monthsElapsed) || 1);
+            const effectiveHistory = normalizeProductHistory(itemName, p0, pHistory);
 
-            // 1단계: 월평균 시세 변동률 r = (P_0 / P_-n)^(1/n) - 1
-            let r = Math.pow(p0 / pPast, 1 / n) - 1;
+            let p3, p2, p1;
+            if (Array.isArray(effectiveHistory) && effectiveHistory.length >= 3) {
+                p3 = toCleanNumber(effectiveHistory[0]);
+                p2 = toCleanNumber(effectiveHistory[1]);
+                p1 = toCleanNumber(effectiveHistory[2]);
+            } else {
+                const singlePrev = toCleanNumber(Array.isArray(effectiveHistory) ? effectiveHistory[effectiveHistory.length - 1] : effectiveHistory);
+                p1 = singlePrev > 0 ? singlePrev : (p0 * 1.015);
+                const baseStep = p1 / p0;
+                p2 = p1 * baseStep;
+                p3 = p2 * baseStep;
+            }
 
-            // 일시적 이상 매물로 인한 극단적 왜곡 방지 (-5.0% ~ +3.0%)
-            r = Math.max(-0.05, Math.min(0.03, r));
+            if (p1 <= 0) p1 = p0 * 1.015;
+            if (p2 <= 0) p2 = p1 * (p1 / p0);
+            if (p3 <= 0) p3 = p2 * (p2 / p1);
 
-            // 2단계: m개월 후 예상 시세 P_m = P_0 * (1 + r)^m
+            // 1단계: 3개월간의 월별 구간 변동률 (r1: 3→2개월전, r2: 2→1개월전, r3: 1개월전→현재)
+            const r1 = (p2 - p3) / p3;
+            const r2 = (p1 - p2) / p2;
+            const r3 = (p0 - p1) / p1;
+
+            // 2단계: 전체 3개월 변동을 모두 반영한 가중 월평균 변동률 (과거 20% : 직전 30% : 최근 50%)
+            let r = (0.20 * r1) + (0.30 * r2) + (0.50 * r3);
+
+            // 극단적 왜곡 방지 (-5.0% ~ +3.5%)
+            r = Math.max(-0.05, Math.min(0.035, r));
+
+            // 3단계: m개월 후 예상 시세 P_m = P_0 * (1 + r)^m
             const trend = [];
             for (let m = 0; m < 6; m++) {
                 const predicted = p0 * Math.pow(1 + r, m);
@@ -779,10 +837,10 @@
             const sample = presets[key];
             if (!sample) return;
             startScanUI(sample.img, "사진 압축 및 이미지 인코딩 중...");
-            setTimeout(() => { updateProgressText("Gemini AI 비전 모델 분석 중..."); }, 300);
-            setTimeout(() => { updateProgressText("중고 거래 시세 및 수익 모델 산출 중..."); }, 600);
+            setTimeout(() => { updateProgressText("AI 비전 모델 분석 중..."); }, 300);
+            setTimeout(() => { updateProgressText("최근 3개월 시세 변동 및 수익 모델 산출 중..."); }, 600);
             setTimeout(() => {
-                sample.trend = calculateTrendArray(sample.price, sample.pPrev);
+                sample.trend = calculateTrendArray(sample.price, sample.pHistory, sample.name);
                 finishAnalysisUI({ ...sample });
             }, 900);
         }
@@ -847,14 +905,16 @@
             const base64Data = dataUrl.split(',')[1];
 
             const prompt = `당신은 대한민국 대표 중고 거래 플랫폼(당근마켓, 번개장터, 중고나라)의 실거래가 감정 전문가입니다.
-사진 속 물건의 정확한 브랜드와 모델명을 식별하고, 최근 한국 시장의 실제 중고 직거래 시세를 바탕으로 JSON 결과를 반환하세요.
+사진 속 물건의 정확한 브랜드와 모델명을 식별하고, 최근 한국 시장의 실제 중고 직거래 시세 및 최근 3개월간의 실거래 가격 변동 추이를 바탕으로 JSON 결과를 반환하세요.
 
-[핵심 인식 및 시세 산정 규칙]
-1. 사진 속 기기가 닌텐도 스위치 2(Nintendo Switch 2) 후면이나 실물 기기일 경우, 절대로 '미출시 목업', '가상 렌더링', '더미 제품'으로 판단하지 마세요. 현재 정식 유통 및 실제 중고 거래가 이루어지는 정상 제품으로 판정하세요.
-2. 닌텐도 스위치 2(Nintendo Switch 2)의 중고 시세는 실제 한국 시장 시세(약 56만~67만원 선)로 산정하세요.
-3. 아이폰 15 프로 (256GB)는 국내 중고 시세(약 70만~85만원 선)로 산정하세요.
-4. 지포스 RTX 5090 (32GB)은 국내 실제 거래 시세(약 840만~960만원 선)로 산정하세요.
-5. pPrev 값은 1달 전의 예상 중고 거래 가격을 원 단위 숫자로 함께 반환하세요.
+[핵심 인식 및 3개월 시세 산정 규칙]
+1. 사진 속 기기가 닌텐도 스위치 2(Nintendo Switch 2) 후면이나 실물 기기일 경우, 절대로 '미출시 목업', '가상 렌더링', '더미 제품'으로 판단하지 마세요. 현재 정식 유통 및 실제 중고 거래가 이루어지는 정상 제품(약 56만~67만원 선)으로 판정하며, 높은 수요로 인해 완만한 강보합·상승 추세(예: pHistory: [600000, 610000, 615000], price: 620000)를 반영하세요.
+2. 아이폰 15 프로 (256GB)는 국내 중고 시세(약 70만~85만원 선)로 산정하세요.
+3. 지포스 RTX 5090 (32GB)은 국내 실제 거래 시세(약 840만~960만원 선)로 산정하세요.
+4. 모든 업로드된 품목에 대해 최근 3개월간의 한국 중고 시장 실거래 시세 추이(pHistory: [3개월 전 평균가, 2개월 전 평균가, 1개월 전 평균가])를 반드시 원 단위 순수 숫자로 산출하세요.
+   - 플래그십 그래픽카드(RTX 5090/5080/4090 등), 닌텐도 스위치 2 등 공급 부족·높은 수요로 시세가 오르는 인기 품목은 pHistory[0] < pHistory[1] < pHistory[2] < price 형태의 상승 추세로 반영하세요.
+   - 스마트폰, 일반 노트북, 음향기기, 생활가전처럼 시간이 지나며 감가상각되는 품목은 pHistory[0] > pHistory[1] > pHistory[2] > price 형태의 하락 추세로 반영하세요.
+5. 사람, 부동산/건물, 불법·거래금지 품목은 price: 0, minPrice: 0, maxPrice: 0, grade: "거래 불가", prob: "0%", pHistory: [0, 0, 0]으로 반환하세요.
 
 반드시 마크다운 문법(\`\`\`json 등) 없이 순수 JSON 문자열로만 응답하세요:
 {
@@ -866,7 +926,7 @@
   "maxPrice": 최대시세숫자,
   "grade": "상태 등급(예: S 등급, A+ 등급, A 등급)",
   "prob": "90%",
-  "pPrev": 1달전예상시세숫자
+  "pHistory": [3개월전실거래가숫자, 2개월전실거래가숫자, 1개월전실거래가숫자]
 }`;
 
             try {
@@ -902,11 +962,28 @@
                     const textResult = result.candidates[0].content.parts.map(p => p.text || '').join('\n');
                     const jsonMatch = textResult.match(/\{[\s\S]*\}/);
                     if (jsonMatch) {
-                        updateProgressText("중고 거래 시세 및 수익 모델 산출 중...");
+                        updateProgressText("최근 3개월 시세 변동 및 수익 모델 산출 중...");
 
                         const parsedData = JSON.parse(jsonMatch[0]);
+                        parsedData.price = toCleanNumber(parsedData.price);
+                        parsedData.minPrice = toCleanNumber(parsedData.minPrice);
+                        parsedData.maxPrice = toCleanNumber(parsedData.maxPrice);
+
+                        if (Array.isArray(parsedData.pHistory)) {
+                            parsedData.pHistory = parsedData.pHistory.map(v => toCleanNumber(v));
+                        } else if (parsedData.pPrev) {
+                            const prev = toCleanNumber(parsedData.pPrev);
+                            const step = parsedData.price > 0 ? prev / parsedData.price : 1.015;
+                            parsedData.pHistory = [
+                                Math.round(prev * step * step),
+                                Math.round(prev * step),
+                                prev
+                            ];
+                        }
+
+                        parsedData.pHistory = normalizeProductHistory(parsedData.name, parsedData.price, parsedData.pHistory);
                         parsedData.img = dataUrl;
-                        parsedData.trend = calculateTrendArray(parsedData.price, parsedData.pPrev);
+                        parsedData.trend = calculateTrendArray(parsedData.price, parsedData.pHistory, parsedData.name);
 
                         setTimeout(() => {
                             finishAnalysisUI(parsedData);
@@ -950,8 +1027,11 @@
             data.date = data.date || new Date().toLocaleDateString('ko-KR');
             data.img = data.img || document.getElementById('itemPreviewImg').src;
 
+            const priceNum = toCleanNumber(data.price);
+            data.price = priceNum;
+
             const isUnsellable =
-                Number(data.price) <= 0 ||
+                priceNum <= 0 ||
                 /불가|금지/.test(`${data.grade || ''} ${data.category || ''} ${data.name || ''}`);
 
             if (isUnsellable) {
@@ -971,7 +1051,7 @@
             }
 
             if (!data.trend) {
-                data.trend = calculateTrendArray(data.price, data.pPrev);
+                data.trend = calculateTrendArray(data.price, data.pHistory || data.pPrev, data.name);
             }
 
             currentItemData = data;
@@ -981,9 +1061,10 @@
             document.getElementById('itemCategoryTag').innerText = data.category;
             document.getElementById('itemDescriptionDisplay').innerText = data.description;
 
-            const priceNum = Number(data.price) || 0;
-            const minPriceNum = Number(data.minPrice) || Math.round(priceNum * 0.92);
-            const maxPriceNum = Number(data.maxPrice) || Math.round(priceNum * 1.08);
+            const minPriceNum = toCleanNumber(data.minPrice) || Math.round(priceNum * 0.92);
+            const maxPriceNum = toCleanNumber(data.maxPrice) || Math.round(priceNum * 1.08);
+            data.minPrice = minPriceNum;
+            data.maxPrice = maxPriceNum;
 
             document.getElementById('priceDisplay').innerHTML = `${priceNum.toLocaleString()} <span class="text-sm font-normal text-[#6e6e73]">원</span>`;
             document.getElementById('conditionGradeDisplay').innerText = data.grade;
@@ -1180,7 +1261,7 @@
                     maxPrice: item.maxPrice,
                     grade: item.grade,
                     prob: item.prob,
-                    pPrev: item.pPrev,
+                    pHistory: item.pHistory,
                     scores: item.scores,
                     trend: item.trend,
                     img: item.img && item.img.length < 150000 ? item.img : 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?auto=format&fit=crop&w=400&q=60'
